@@ -12,6 +12,7 @@ iThuba connects graduates with employers. Graduates can build profiles and portf
 - Graduate registration with email confirmation and profile creation.
 - Work experience and project portfolios, with private CV and project-evidence uploads.
 - Public vacancy browsing and job applications with cover letters.
+- Optional JPEG, PNG, or WebP images on employer job listings.
 - Employer vacancy management, applicant review, and application status updates.
 - Employer graduate directory with temporary signed links to graduate documents.
 
@@ -46,6 +47,7 @@ iThuba connects graduates with employers. Graduates can build profiles and portf
    4. `supabase/migrations/20261028000400_fix_employer_applicant_access.sql`
    5. `supabase/migrations/20261028000500_reset_job_policies.sql`
    6. `supabase/migrations/20261028000600_fix_work_arrangement_constraint.sql`
+   7. `supabase/migrations/20261029000100_job_images.sql`
 
    Do not rerun these migrations on a project with existing custom policies without first reviewing the SQL changes.
 
@@ -84,6 +86,7 @@ npm run build
 - The previous local SQLite database is not used by the app and is excluded from Git because it may contain private account and session data.
 - Supabase default email delivery has limits; configure custom SMTP for production.
 - Graduate documents use expiring signed links. Accounts with the `employer` role can access graduate CVs and portfolios; employer verification is not independently enforced by the app. Verify employers and review access policies before using real candidate data.
+- Optional job listing images are public and limited to JPEG, PNG, or WebP files up to 5 MB. Do not upload sensitive images.
 - **Repository access:** reviewers need a public repository or explicit GitHub access. If the repository is private, invite reviewers before submission. The source link above should be tested in a signed-out browser.
 
 ## Pitch deck outline

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import type { Job } from "@/lib/types";
@@ -33,6 +34,16 @@ export default async function JobsPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {jobs?.map((job) => (
               <article key={job.id} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                {job.job_image_path && (
+                  <Image
+                    src={supabase.storage.from("job-images").getPublicUrl(job.job_image_path).data.publicUrl}
+                    alt={`${job.title} listing`}
+                    width={1200}
+                    height={630}
+                    unoptimized
+                    className="mb-5 aspect-video w-full rounded-2xl object-cover"
+                  />
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-teal-800">{job.type}</span>
                   <span className="text-right text-sm text-slate-500">{job.location}</span>

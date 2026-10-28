@@ -42,6 +42,7 @@ export interface Job {
   application_deadline?: string | null;
   openings?: number;
   skills?: string | null;
+  job_image_path?: string | null;
   created_at: string;
   employer_name?: string;
 }

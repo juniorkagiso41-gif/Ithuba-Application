@@ -1,29 +1,30 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Job } from "@/lib/types";
 
-const metrics = [
-  { label: "Graduate profiles", value: "12.4k" },
-  { label: "Verified projects", value: "3,280" },
-  { label: "Employer-ready roles", value: "426" },
-  { label: "Verification partners", value: "18" },
+const platformSteps = [
+  { label: "Build a profile", value: "Graduate profile" },
+  { label: "Show your work", value: "Projects & experience" },
+  { label: "Find a role", value: "Job opportunities" },
+  { label: "Take the next step", value: "Applications" },
 ];
 
 const features = [
   {
-    title: "Proof of Ability Profile",
-    description: "Graduates connect practical work to evidence, qualifications, and verified assessments instead of vague claims.",
+    title: "Graduate portfolios",
+    description: "Graduates can present work history, projects, skills, a CV, and supporting evidence.",
   },
   {
-    title: "Employer review workspace",
-    description: "Hiring teams can filter applicants by evidence, evaluate job-fit, and manage applications in a structured workflow.",
+    title: "Vacancies and applications",
+    description: "Graduates can browse public job listings and apply with a cover note.",
   },
   {
-    title: "Career readiness guidance",
-    description: "Users identify gaps, plan learning, and prepare for interviews with transparent criteria and actionable feedback.",
+    title: "Employer workspace",
+    description: "Employers can publish vacancies, review applicants, and update application statuses.",
   },
 ];
 
-export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage?: string }) {
+export function HomePage({ jobs, jobLoadMessage }: { jobs: (Job & { imageUrl?: string | null })[]; jobLoadMessage?: string }) {
   return (
     <main className="min-h-screen">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
@@ -66,7 +67,7 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
               Turn practical ability into credible opportunities.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              iThuba helps graduates show what they can do through projects, evidence, and verified qualifications — while giving employers a fairer way to assess fit.
+              iThuba helps graduates present their projects and experience, find vacancies, and apply, while employers manage job listings and applications.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="/register" className="rounded-full bg-teal-700 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-teal-700/20 hover:bg-teal-800">
@@ -77,10 +78,10 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
               </Link>
             </div>
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {metrics.map((metric) => (
-                <div key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-2xl font-black text-slate-900">{metric.value}</div>
-                  <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">{metric.label}</div>
+              {platformSteps.map((step) => (
+                <div key={step.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="text-lg font-black text-slate-900">{step.value}</div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">{step.label}</div>
                 </div>
               ))}
             </div>
@@ -89,33 +90,25 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/40">
             <div className="rounded-2xl bg-slate-900 p-5 text-white">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">Proof of ability</p>
-                <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">Verified</span>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">Example profile</p>
+                <span className="rounded-full bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-200">Illustrative</span>
               </div>
               <div className="mt-6 space-y-4">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Candidate</div>
-                  <div className="mt-1 text-2xl font-bold">Mpho Ndlovu</div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Graduate portfolio</div>
+                  <div className="mt-1 text-2xl font-bold">Projects and experience</div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-xl bg-slate-800 p-3">
-                    <div className="text-slate-400">Portfolio</div>
-                    <div className="mt-1 font-semibold">7 projects</div>
+                    <div className="text-slate-400">Showcase</div>
+                    <div className="mt-1 font-semibold">Projects and work</div>
                   </div>
                   <div className="rounded-xl bg-slate-800 p-3">
-                    <div className="text-slate-400">Skills</div>
-                    <div className="mt-1 font-semibold">TypeScript / SQL</div>
+                    <div className="text-slate-400">Supporting details</div>
+                    <div className="mt-1 font-semibold">Skills and evidence</div>
                   </div>
                 </div>
-                <div className="rounded-xl bg-slate-800 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Role readiness</span>
-                    <span className="font-semibold">84%</span>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-slate-700">
-                    <div className="h-full w-[84%] rounded-full bg-gradient-to-r from-teal-400 to-emerald-400" />
-                  </div>
-                </div>
+                <p className="text-sm leading-6 text-slate-300">An example of the information graduates can add to a portfolio.</p>
               </div>
             </div>
           </div>
@@ -125,7 +118,7 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
       <section id="platform" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-10 max-w-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-teal-700">Platform features</p>
-          <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Built around evidence, fairness, and real outcomes.</h2>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Tools for graduates and employers.</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {features.map((feature) => (
@@ -142,14 +135,24 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-teal-700">Live opportunities</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Roles employers are actively reviewing.</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-teal-700">Job opportunities</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Explore roles posted by employers.</h2>
             </div>
             <Link href="/jobs" className="text-sm font-semibold text-teal-700 hover:text-teal-800">View all jobs</Link>
           </div>
           {jobLoadMessage ? <div role="status" className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">{jobLoadMessage}</div> : jobs.length ? <div className="grid gap-5 md:grid-cols-3">
             {jobs.map((job) => (
               <div key={job.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-transform hover:-translate-y-1 hover:shadow-lg">
+                {job.imageUrl && (
+                  <Image
+                    src={job.imageUrl}
+                    alt={`${job.title} listing`}
+                    width={1200}
+                    height={630}
+                    unoptimized
+                    className="mb-5 aspect-video w-full rounded-2xl object-cover"
+                  />
+                )}
                 <div className="flex items-center justify-between gap-3">
                   <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
                     {job.type}
@@ -180,17 +183,17 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
         <div className="rounded-[32px] bg-slate-900 p-8 text-white md:p-12">
           <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-300">Why it matters</p>
-              <h2 className="mt-4 text-3xl font-black tracking-tight text-white">More credible skills. Fairer hiring. Better preparation.</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-300">How it works</p>
+              <h2 className="mt-4 text-3xl font-black tracking-tight text-white">Keep profiles, vacancies, and applications connected.</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl bg-slate-800 p-5">
-                <div className="text-3xl font-black text-teal-300">63%</div>
-                <div className="mt-2 text-sm text-slate-300">of graduate applicants are difficult to evaluate through CV alone.</div>
+                <div className="text-xl font-black text-teal-300">For graduates</div>
+                <div className="mt-2 text-sm text-slate-300">Build a profile, add experience and projects, and apply to vacancies.</div>
               </div>
               <div className="rounded-2xl bg-slate-800 p-5">
-                <div className="text-3xl font-black text-teal-300">4x</div>
-                <div className="mt-2 text-sm text-slate-300">more useful screening when evidence is visible to employers.</div>
+                <div className="text-xl font-black text-teal-300">For employers</div>
+                <div className="mt-2 text-sm text-slate-300">Publish roles, review applications, and manage applicant statuses.</div>
               </div>
             </div>
           </div>
@@ -200,19 +203,19 @@ export function HomePage({ jobs, jobLoadMessage }: { jobs: Job[]; jobLoadMessage
       <section id="security" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Privacy</div>
-            <h3 className="mt-3 text-xl font-bold text-slate-900">Profile control</h3>
-            <p className="mt-2 text-sm leading-7 text-slate-600">Users manage visibility, consent, and access to their evidence and references.</p>
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Graduate files</div>
+            <h3 className="mt-3 text-xl font-bold text-slate-900">Private documents</h3>
+            <p className="mt-2 text-sm leading-7 text-slate-600">CVs and project evidence are stored in private storage and shared using temporary links.</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Verification</div>
-            <h3 className="mt-3 text-xl font-bold text-slate-900">Reviewable claims</h3>
-            <p className="mt-2 text-sm leading-7 text-slate-600">Qualification and project claims remain traceable to evidence, review decisions, and audit entries.</p>
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Job listings</div>
+            <h3 className="mt-3 text-xl font-bold text-slate-900">Optional public images</h3>
+            <p className="mt-2 text-sm leading-7 text-slate-600">Employers may add an image to a listing. Uploaded listing images are publicly viewable.</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Fairness</div>
-            <h3 className="mt-3 text-xl font-bold text-slate-900">Human decisions</h3>
-            <p className="mt-2 text-sm leading-7 text-slate-600">AI and matching are assistive, never hidden or sole determinants of hiring outcomes.</p>
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-teal-700">Account access</div>
+            <h3 className="mt-3 text-xl font-bold text-slate-900">Review employer accounts</h3>
+            <p className="mt-2 text-sm leading-7 text-slate-600">Employer-role accounts can access graduate portfolios. Verify employer accounts before using real candidate data.</p>
           </div>
         </div>
       </section>

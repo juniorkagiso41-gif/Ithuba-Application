@@ -1,10 +1,31 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/utils/supabase/server";
 import type { Application, Job } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+const jobImageBucket = "job-images";
+const maxJobImageSize = 5 * 1024 * 1024;
+const jobImageTypes = new Map([
+  ["image/jpeg", { extension: "jpg", signature: [0xff, 0xd8, 0xff] }],
+  ["image/png", { extension: "png", signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] }],
+  ["image/webp", { extension: "webp", signature: [0x52, 0x49, 0x46, 0x46] }],
+]);
+
+async function isValidJobImage(file: File) {
+  const imageType = jobImageTypes.get(file.type);
+  if (!imageType) {
+    return false;
+  }
+  const signature = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (!imageType.signature.every((byte, index) => signature[index] === byte)) {
+    return false;
+  }
+  return file.type !== "image/webp" ||
+    String.fromCharCode(...signature.slice(8, 12)) === "WEBP";
+}
 
 async function signOut() {
   "use server";
@@ -41,6 +62,11 @@ async function createJob(formData: FormData) {
   const openings = Number(formData.get("openings") ?? 1);
   const salaryMinValue = String(formData.get("salaryMin") ?? "").trim();
   const salaryMaxValue = String(formData.get("salaryMax") ?? "").trim();
+  const imageField = formData.get("jobImage");
+  if (imageField !== null && !(imageField instanceof File)) {
+    throw new Error("The optional job image is not a valid file.");
+  }
+  const jobImage = imageField instanceof File && imageField.size > 0 ? imageField : null;
   const salaryMin = salaryMinValue ? Number(salaryMinValue) : null;
   const salaryMax = salaryMaxValue ? Number(salaryMaxValue) : null;
 
@@ -60,8 +86,33 @@ async function createJob(formData: FormData) {
   if (salaryMin !== null && salaryMax !== null && salaryMax < salaryMin) {
     throw new Error("Maximum salary must be greater than or equal to minimum salary.");
   }
+  if (jobImage && jobImage.size > maxJobImageSize) {
+    throw new Error("The job image must be 5 MB or smaller.");
+  }
+  if (jobImage && !(await isValidJobImage(jobImage))) {
+    throw new Error("Choose a valid JPEG, PNG, or WebP image.");
+  }
 
   const supabase = await createClient();
+  let imagePath: string | null = null;
+  if (jobImage) {
+    const extension = jobImageTypes.get(jobImage.type)?.extension;
+    if (!extension) {
+      throw new Error("Choose a valid JPEG, PNG, or WebP image.");
+    }
+    imagePath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from(jobImageBucket)
+      .upload(imagePath, jobImage, {
+        cacheControl: "3600",
+        contentType: jobImage.type,
+        upsert: false,
+      });
+    if (uploadError) {
+      throw new Error(`Could not upload the job image: ${uploadError.message}`);
+    }
+  }
+
   const { error } = await supabase.from("jobs").insert({
     employer_id: user.id,
     title,
@@ -81,9 +132,16 @@ async function createJob(formData: FormData) {
     application_deadline: deadline || null,
     openings,
     skills: skills || null,
+    job_image_path: imagePath,
   });
 
   if (error) {
+    if (imagePath) {
+      const { error: cleanupError } = await supabase.storage.from(jobImageBucket).remove([imagePath]);
+      if (cleanupError) {
+        throw new Error(`Could not publish the vacancy: ${error.message}. The uploaded image also could not be removed: ${cleanupError.message}`);
+      }
+    }
     throw new Error(`Could not publish the vacancy: ${error.message}`);
   }
   redirect("/employer");
@@ -221,7 +279,7 @@ export default async function EmployerDashboardPage() {
           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Talent pipeline</p>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Create a vacancy</h1>
-            <form action={createJob} className="mt-6 space-y-4">
+            <form action={createJob} encType="multipart/form-data" className="mt-6 space-y-4">
               <div>
                 <label htmlFor="title" className="mb-2 block text-sm font-semibold text-slate-700">Title</label>
                 <input id="title" name="title" required className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-teal-500 focus:bg-white" placeholder="Graduate Product Analyst" />
@@ -257,6 +315,11 @@ export default async function EmployerDashboardPage() {
                   <label htmlFor="department" className="mb-2 block text-sm font-semibold text-slate-700">Department / team</label>
                   <input id="department" name="department" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-teal-500 focus:bg-white" placeholder="Product, Finance, Engineering..." />
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="jobImage" className="mb-2 block text-sm font-semibold text-slate-700">Job image <span className="font-normal text-slate-500">(optional, JPEG/PNG/WebP, up to 5 MB)</span></label>
+                <input id="jobImage" name="jobImage" type="file" accept="image/jpeg,image/png,image/webp" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:font-semibold file:text-teal-800" />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -336,6 +399,16 @@ export default async function EmployerDashboardPage() {
             <div className="mt-5 space-y-4">
               {jobs.length > 0 ? jobs.map((job) => (
                 <div key={job.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  {job.job_image_path && (
+                    <Image
+                      src={supabase.storage.from(jobImageBucket).getPublicUrl(job.job_image_path).data.publicUrl}
+                      alt={`${job.title} listing`}
+                      width={1200}
+                      height={630}
+                      unoptimized
+                      className="mb-4 aspect-video w-full rounded-xl object-cover"
+                    />
+                  )}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-lg font-bold text-slate-900">{job.title}</div>

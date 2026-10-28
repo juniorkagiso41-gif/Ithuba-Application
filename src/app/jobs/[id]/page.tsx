@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -65,6 +66,16 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8">
+        {job.job_image_path && (
+          <Image
+            src={supabase.storage.from("job-images").getPublicUrl(job.job_image_path).data.publicUrl}
+            alt={`${job.title} listing`}
+            width={1200}
+            height={630}
+            unoptimized
+            className="mb-8 aspect-video w-full rounded-2xl object-cover"
+          />
+        )}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Vacancy</p>
