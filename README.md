@@ -68,7 +68,7 @@ iThuba connects graduates with employers. Graduates can build profiles and portf
 npm run dev
 ```
 
-Open the deployed app at [https://ithuba-app.vercel.app](https://ithuba-app.vercel.app/).
+For local development, open [http://localhost:3000](http://localhost:3000). The deployed demo is available at [https://ithuba-app.vercel.app](https://ithuba-app.vercel.app/).
 
 Run the available checks with:
 
