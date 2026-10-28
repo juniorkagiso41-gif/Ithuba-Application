@@ -5,7 +5,7 @@ iThuba connects graduates with employers. Graduates can build profiles and portf
 ## Project links
 
 - **Live demo:** [https://ithuba-app.vercel.app](https://ithuba-app.vercel.app)
-- **Source repository:** [https://github.com/juniorkagiso41-gif/Ithuba](https://github.com/juniorkagiso41-gif/Ithuba)
+- **Source repository:** [https://github.com/juniorkagiso41-gif/Ithuba-Application](https://github.com/juniorkagiso41-gif/Ithuba-Application)
 
 ## What iThuba does
 
