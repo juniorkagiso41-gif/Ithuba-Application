@@ -28,31 +28,40 @@ export default async function DashboardPage() {
   }
 
   const supabase = await createClient();
-  const { data: jobRows, error: jobsError } = await supabase
-    .from("jobs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(5)
-    .returns<Job[]>();
+  const [jobsResult, applicationsResult, profileResult, workResult, projectResult, documentResult] = await Promise.all([
+    supabase.from("jobs").select("*").order("created_at", { ascending: false }).limit(5).returns<Job[]>(),
+    supabase.from("applications").select("*").eq("graduate_id", user.id).order("updated_at", { ascending: false }).limit(5).returns<Application[]>(),
+    supabase.from("profiles").select("headline, bio, location, skills, education").eq("id", user.id).single(),
+    supabase.from("graduate_work_experience").select("id").eq("graduate_id", user.id),
+    supabase.from("graduate_projects").select("id").eq("graduate_id", user.id),
+    supabase.from("graduate_documents").select("document_type").eq("graduate_id", user.id),
+  ]);
+  const { data: jobRows, error: jobsError } = jobsResult;
   if (jobsError) {
     throw new Error(`Could not load career opportunities: ${jobsError.message}`);
+  }
+
+  const { data: applicationRows, error: applicationsError } = applicationsResult;
+  if (applicationsError) {
+    throw new Error(`Could not load your applications: ${applicationsError.message}`);
+  }
+  if (profileResult.error) {
+    throw new Error(`Could not load your profile readiness: ${profileResult.error.message}`);
+  }
+  if (workResult.error) {
+    throw new Error(`Could not load your work history for profile readiness: ${workResult.error.message}`);
+  }
+  if (projectResult.error) {
+    throw new Error(`Could not load your projects for profile readiness: ${projectResult.error.message}`);
+  }
+  if (documentResult.error) {
+    throw new Error(`Could not load your documents for profile readiness: ${documentResult.error.message}`);
   }
 
   const jobs = (jobRows ?? []).map((job) => ({
     ...job,
     employer_name: job.company_name || "iThuba employer",
   }));
-
-  const { data: applicationRows, error: applicationsError } = await supabase
-    .from("applications")
-    .select("*")
-    .eq("graduate_id", user.id)
-    .order("updated_at", { ascending: false })
-    .limit(5)
-    .returns<Application[]>();
-  if (applicationsError) {
-    throw new Error(`Could not load your applications: ${applicationsError.message}`);
-  }
 
   const applicationJobIds = [...new Set((applicationRows ?? []).map((application) => application.job_id))];
   const { data: applicationJobs, error: applicationJobsError } = applicationJobIds.length
@@ -66,6 +75,30 @@ export default async function DashboardPage() {
     ...application,
     job_title: applicationJobTitles.get(application.job_id) ?? "Opportunity",
   }));
+
+  const profile = profileResult.data;
+  const documents = documentResult.data ?? [];
+  const readinessItems = [
+    { label: "Full name", complete: Boolean(user.name.trim()) },
+    { label: "Professional headline", complete: Boolean(profile.headline?.trim()) },
+    { label: "Professional summary", complete: Boolean(profile.bio?.trim()) },
+    { label: "Location", complete: Boolean(profile.location?.trim()) },
+    { label: "Skills", complete: Boolean(profile.skills?.trim()) },
+    { label: "Education and qualifications", complete: Boolean(profile.education?.trim()) },
+    { label: "CV / résumé", complete: documents.some((document) => document.document_type === "cv") },
+    { label: "Work experience", complete: (workResult.data ?? []).length > 0 },
+    { label: "Project in portfolio", complete: (projectResult.data ?? []).length > 0 },
+    { label: "Project evidence file", complete: documents.some((document) => document.document_type === "project") },
+  ];
+  const completedReadinessItems = readinessItems.filter((item) => item.complete).length;
+  const readinessPercent = Math.round((completedReadinessItems / readinessItems.length) * 100);
+  const readinessLabel = readinessPercent >= 90
+    ? "Strong profile"
+    : readinessPercent >= 70
+      ? "Nearly there"
+      : readinessPercent >= 40
+        ? "In progress"
+        : "Getting started";
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -90,19 +123,38 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Proof of ability</p>
                 <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Profile readiness</h1>
+                <p className="mt-2 text-sm text-slate-600">Based on the profile details, experience, projects, and documents you have added.</p>
               </div>
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">84% ready</span>
+              <span className="shrink-0 rounded-full bg-teal-100 px-3 py-1 text-sm font-semibold text-teal-800">{readinessPercent}% · {readinessLabel}</span>
             </div>
 
             <div className="mt-6 rounded-2xl bg-slate-100 p-4">
               <div className="flex items-center justify-between text-sm font-medium text-slate-700">
-                <span>Core evidence</span>
-                <span>7 of 9 items</span>
+                <span>Profile checklist</span>
+                <span>{completedReadinessItems} of {readinessItems.length} complete</span>
               </div>
-              <div className="mt-3 h-2.5 rounded-full bg-slate-200">
-                <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
+              <div
+                className="mt-3 h-2.5 rounded-full bg-slate-200"
+                role="progressbar"
+                aria-label="Profile readiness"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={readinessPercent}
+              >
+                <div className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all" style={{ width: `${readinessPercent}%` }} />
               </div>
             </div>
+            <ul className="mt-5 grid gap-2 sm:grid-cols-2" aria-label="Profile readiness checklist">
+              {readinessItems.map((item) => (
+                <li key={item.label} className="flex items-center gap-2 text-sm text-slate-700">
+                  <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${item.complete ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>
+                    {item.complete ? "✓" : "–"}
+                  </span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs leading-5 text-slate-500">This score reflects what you have added; it does not verify claims or predict hiring outcomes. <Link href="/profile" className="font-semibold text-teal-700 underline">Update your profile</Link>.</p>
           </div>
 
           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
@@ -148,13 +200,9 @@ export default async function DashboardPage() {
           </div>
 
           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-900">Skills checklist</h2>
-            <ul className="mt-5 space-y-3 text-sm text-slate-700">
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Portfolio, projects and evidence uploaded</li>
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Qualifications and institution reviewed</li>
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" /> Work readiness statement pending</li>
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-slate-300" /> Mock assessment not started</li>
-            </ul>
+            <h2 className="text-xl font-black text-slate-900">Build your profile</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Add your experience, projects, and supporting documents to give employers a clearer picture of your skills.</p>
+            <Link href="/profile" className="mt-4 inline-block text-sm font-semibold text-teal-700 underline">Complete your profile</Link>
           </div>
         </aside>
       </div>
