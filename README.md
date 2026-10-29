@@ -48,6 +48,7 @@ iThuba connects graduates with employers. Graduates can build profiles and portf
    5. `supabase/migrations/20261028000500_reset_job_policies.sql`
    6. `supabase/migrations/20261028000600_fix_work_arrangement_constraint.sql`
    7. `supabase/migrations/20261029000100_job_images.sql`
+   8. `supabase/migrations/20261029000200_align_graduate_document_metadata.sql`
 
    Do not rerun these migrations on a project with existing custom policies without first reviewing the SQL changes.
 
